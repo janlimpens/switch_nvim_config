@@ -33,9 +33,9 @@ sub relink($config) {
   run(@commands);
 }
 
-sub purge() {
+sub purge($config=undef) {
   my @commands =
-    map { "rm -rf $_" }
+    map { "rm -rf $_" . ($config ? ".$config" : '') }
     @dirs;
   run(@commands);
 }
@@ -44,7 +44,7 @@ sub print_usage() {
   print "Please use a valid command. Options are:\n";
   print "  * init <config>, creates named configs from current and links to them\n";
   print "  * relink <config>, links to named configs\n";
-  print "  * purge, removes unnamed nvim config directories\n";
+  print "  * purge, removes nvim config directories. Either named or unnamed.\n";
   print "  * help, shows this info\n";
   print "like 'switch_nvim_config init astro'\n";
 }
@@ -73,7 +73,7 @@ elsif ($command eq 'relink') {
   relink($config);
 }
 elsif ($command eq 'purge') {
-  purge();
+  purge($config);
 }
 else {
   print_usage();
