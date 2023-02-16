@@ -1,0 +1,82 @@
+#! /usr/bin/perl
+use warnings;
+use strict;
+use feature qw(signatures);
+
+package switch_nvim_config;
+
+my @dirs = qw(
+  ~/.config/nvim
+  ~/.local/share
+  ~/.local/state
+  ~/.cache/nvim
+);
+
+sub run(@commands) {
+  my $chained = join(" \\\n&& ", @commands);
+
+  print $chained . "\n";
+  `$chained`;
+}
+
+sub init($config) {
+  my @commands =
+    map { "mv $_ $_.$config" }
+    @dirs;
+  run(@commands);
+}
+
+sub relink($config) {
+  my @commands =
+    map { "ln -snf $_.$config $_" }
+    @dirs;
+  run(@commands);
+}
+
+sub purge() {
+  my @commands =
+    map { "rm -rf $_" }
+    @dirs;
+  run(@commands);
+}
+
+sub print_usage() {
+  print "Please use a valid command. Options are:\n";
+  print "  * init <config>, creates named configs from current and links to them\n";
+  print "  * relink <config>, links to named configs\n";
+  print "  * purge, removes unnamed nvim config directories\n";
+  print "  * help, shows this info\n";
+  print "like 'switch_nvim_config init astro'\n";
+}
+
+my ($arg1, $arg2) = @ARGV;
+
+my @valid_commands = qw(init relink purge help);
+
+my $command = $arg1
+  if $arg1 && grep {$_ eq $arg1} @valid_commands;
+
+$command //= 'help';
+
+my $config = $arg2;
+
+my @commands_that_require_config = qw(init relink);
+
+print_usage() && exit
+  if grep {$_ eq $command} @commands_that_require_config && !$config;
+
+if ($command eq 'init') {
+  init($config);
+  relink($config);
+}
+elsif ($command eq 'relink') {
+  relink($config);
+}
+elsif ($command eq 'purge') {
+  purge();
+}
+else {
+  print_usage();
+}
+
+exit;
